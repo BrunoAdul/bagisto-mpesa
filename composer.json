@@ -1,0 +1,29 @@
+{
+    "name": "bruno/mpesa",
+    "description": "Mpesa payment integration for Bagisto",
+    "type": "bagisto-package",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Bruno",
+            "email": "brunoadul@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^8.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Bruno\\Mpesa\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Bruno\\Mpesa\\Providers\\MpesaServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+} 
