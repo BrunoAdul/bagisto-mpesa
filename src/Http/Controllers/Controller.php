@@ -1,6 +1,6 @@
 <?php
 
-namespace Bruno\Mpesa\Http\Controllers;
+namespace Brunoadul\Mpesa\Http\Controllers;
 
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Routing\Controller as BaseController;
