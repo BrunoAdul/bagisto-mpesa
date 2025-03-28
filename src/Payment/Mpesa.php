@@ -1,6 +1,6 @@
 <?php
 
-namespace Bruno\Mpesa\Payment;
+namespace Brunoadul\Mpesa\Payment;
 
 use Webkul\Payment\Payment\Payment;
 use Illuminate\Support\Facades\Storage;
