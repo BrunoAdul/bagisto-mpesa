@@ -1,12 +1,12 @@
 <?php
 
-namespace Bruno\Mpesa\Http\Controllers;
+namespace Brunoadul\Mpesa\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Webkul\Checkout\Facades\Cart;
 use Webkul\Sales\Repositories\OrderRepository;
 use Webkul\Sales\Repositories\InvoiceRepository;
-use Bruno\Mpesa\Lib\MpesaHelper;
+use Brunoadul\Mpesa\Lib\MpesaHelper;
 use Illuminate\Support\Facades\Log;
 
 class MpesaController extends Controller
@@ -157,10 +157,14 @@ class MpesaController extends Controller
      */
     public function callback(Request $request)
     {
-        Log::info('Mpesa callback received', ['data' => $request->all()]);
+        Log::info('Mpesa callback received', ['data' => $request->all(), 'headers' => $request->headers->all()]);
 
         try {
             $callbackData = $request->all();
+
+            // Log the raw request content for debugging
+            Log::info('Raw callback content', ['content' => $request->getContent()]);
+
             if (!isset($callbackData['Body']['stkCallback'])) {
                 Log::error('Invalid Mpesa callback data structure', ['data' => $callbackData]);
                 return response()->json(['ResultCode' => 1, 'ResultDesc' => 'Invalid callback data']);
@@ -324,40 +328,65 @@ class MpesaController extends Controller
                     $cart = Cart::getCart();
 
                     if ($cart && $cart->id == $orderId) {
-                        // Create the order from cart data
-                        $order = $this->orderRepository->create(Cart::prepareDataForOrder());
+                        try {
+                            // Create the order from cart data
+                            $order = $this->orderRepository->create(Cart::prepareDataForOrder());
 
-                        // Update the order with payment details
-                        $this->orderRepository->update([
-                            'status' => 'processing',
-                            'mpesa_receipt' => $response['MpesaReceiptNumber'] ?? 'MPESA-' . time(),
-                            'mpesa_phone' => $response['PhoneNumber'] ?? session()->get('mpesa_phone'),
-                            'transaction_date' => now()->format('Y-m-d H:i:s')
-                        ], $order->id);
+                            // Update the order with payment details
+                            $this->orderRepository->update([
+                                'status' => 'processing',
+                                'mpesa_receipt' => $response['MpesaReceiptNumber'] ?? 'MPESA-' . time(),
+                                'mpesa_phone' => $response['PhoneNumber'] ?? session()->get('mpesa_phone'),
+                                'transaction_date' => now()->format('Y-m-d H:i:s')
+                            ], $order->id);
 
-                        if ($order->canInvoice()) {
-                            $this->invoiceRepository->create($this->prepareInvoiceData($order));
+                            if ($order->canInvoice()) {
+                                $this->invoiceRepository->create($this->prepareInvoiceData($order));
+                            }
+
+                            // Deactivate the current cart session
+                            Cart::deActivateCart();
+
+                            session()->flash('order', $order);
+
+                            // Store success in cache
+                            \Cache::put($cacheKey, [
+                                'success' => true,
+                                'amount' => $cart->grand_total,
+                                'receipt' => $response['MpesaReceiptNumber'] ?? 'MPESA-' . time(),
+                                'phone' => $response['PhoneNumber'] ?? session()->get('mpesa_phone'),
+                                'date' => now()->format('Y-m-d H:i:s')
+                            ], now()->addHours(1));
+
+                            Log::info('Order created successfully', ['order_id' => $order->id]);
+
+                            return response()->json([
+                                'success' => true,
+                                'message' => 'Payment completed successfully',
+                                'redirect' => url('/checkout/success')
+                            ]);
+                        } catch (\Exception $e) {
+                            Log::error('Error creating order: ' . $e->getMessage(), [
+                                'trace' => $e->getTraceAsString()
+                            ]);
+
+                            // Even if order creation fails, we should still indicate success
+                            // since the payment was successful
+                            \Cache::put($cacheKey, [
+                                'success' => true,
+                                'amount' => $cart->grand_total,
+                                'receipt' => 'MPESA-' . time(),
+                                'phone' => session()->get('mpesa_phone'),
+                                'date' => now()->format('Y-m-d H:i:s'),
+                                'error' => 'Order creation failed: ' . $e->getMessage()
+                            ], now()->addHours(1));
+
+                            return response()->json([
+                                'success' => true,
+                                'message' => 'Payment completed successfully, but there was an issue creating your order. Please contact customer support.',
+                                'redirect' => url('/checkout/success')
+                            ]);
                         }
-
-                        // Deactivate the current cart session
-                        Cart::deActivateCart();
-
-                        session()->flash('order', $order);
-
-                        // Store success in cache
-                        \Cache::put($cacheKey, [
-                            'success' => true,
-                            'amount' => $cart->grand_total,
-                            'receipt' => $response['MpesaReceiptNumber'] ?? 'MPESA-' . time(),
-                            'phone' => $response['PhoneNumber'] ?? session()->get('mpesa_phone'),
-                            'date' => now()->format('Y-m-d H:i:s')
-                        ], now()->addHours(1));
-
-                        return response()->json([
-                            'success' => true,
-                            'message' => 'Payment completed successfully',
-                            'redirect' => url('/checkout/success')
-                        ]);
                     }
                 }
 

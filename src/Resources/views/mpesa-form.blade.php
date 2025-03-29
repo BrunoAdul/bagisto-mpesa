@@ -1,4 +1,4 @@
-@inject('mpesaPayment', 'Bruno\Mpesa\Payment\Mpesa')
+@inject('mpesaPayment', 'App\Payment\Mpesa')
 
 {!! view_render_event('bagisto.shop.checkout.payment.mpesa.before') !!}
 

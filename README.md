@@ -7,7 +7,7 @@ This package provides M-Pesa payment integration for Bagisto e-commerce platform
 1. Add the package to your Bagisto installation:
 
 ```bash
-composer require bruno/mpesa
+composer require brunoadul/mpesa
 ```
 
 2. Register the service provider in `config/app.php`:
@@ -15,15 +15,15 @@ composer require bruno/mpesa
 ```php
 'providers' => [
     // Other service providers...
-    Bruno\Mpesa\Providers\MpesaServiceProvider::class,
+    Brunoadul\Mpesa\Providers\MpesaServiceProvider::class,
 ],
 ```
 
 3. Publish the package assets:
 
 ```bash
-php artisan vendor:publish --provider="Bruno\Mpesa\Providers\MpesaServiceProvider" --tag=mpesa-assets
-php artisan vendor:publish --provider="Bruno\Mpesa\Providers\MpesaServiceProvider" --tag=mpesa-config
+php artisan vendor:publish --provider="Brunoadul\Mpesa\Providers\MpesaServiceProvider" --tag=mpesa-assets
+php artisan vendor:publish --provider="Brunoadul\Mpesa\Providers\MpesaServiceProvider" --tag=mpesa-config
 ```
 
 4. Clear the cache:

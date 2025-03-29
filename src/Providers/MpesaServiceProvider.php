@@ -1,9 +1,9 @@
 <?php
 
-namespace Bruno\Mpesa\Providers;
+namespace Brunoadul\Mpesa\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Bruno\Mpesa\Lib\MpesaHelper;
+use Brunoadul\Mpesa\Lib\MpesaHelper;
 use Illuminate\Support\Facades\Event;
 use Webkul\Theme\ViewRenderEventManager;
 use Webkul\Checkout\Facades\Cart;

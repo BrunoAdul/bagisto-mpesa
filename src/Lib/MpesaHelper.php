@@ -1,6 +1,6 @@
 <?php
 
-namespace Bruno\Mpesa\Lib;
+namespace Brunoadul\Mpesa\Lib;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -260,7 +260,8 @@ class MpesaHelper
         $password = base64_encode($this->shortcode . $this->passkey . $timestamp);
 
         // Set callback URL - ensure this is a publicly accessible URL
-        $callbackUrl = url('/mpesa/callback');
+        // First try to get from config, then fall back to the local URL
+        $callbackUrl = $this->getConfig('callback_url') ?: env('MPESA_CALLBACK_URL') ?: url('/mpesa/callback');
 
         // Log the callback URL to ensure it's correct
         Log::info('Using callback URL', ['url' => $callbackUrl]);
@@ -270,7 +271,11 @@ class MpesaHelper
 
         // Format phone number to ensure it's in the correct format (254XXXXXXXXX)
         // Remove any non-numeric characters
-        $phone = preg_replace('/[^0-9]/', '', $phone);
+        if ($phone) {
+            $phone = preg_replace('/[^0-9]/', '', $phone);
+        } else {
+            throw new \Exception('Phone number is required');
+        }
 
         // Log the original phone number
         Log::info('Original phone number', ['phone' => $phone]);

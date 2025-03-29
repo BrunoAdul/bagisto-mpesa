@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Bruno\Mpesa\Http\Controllers\MpesaController;
+use Brunoadul\Mpesa\Http\Controllers\MpesaController;
 
 Route::group([
     'middleware' => ['web', 'theme', 'locale', 'currency']
